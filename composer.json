@@ -1,0 +1,39 @@
+{
+    "name": "eriktailor/filament-webp-uploads",
+    "description": "Automatic WebP conversion for Filament FileUpload fields with optional resizing",
+    "keywords": [
+        "filament",
+        "laravel",
+        "webp",
+        "image-optimization",
+        "file-upload"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Erik Tailor",
+            "email": "eriktailor@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "filament/filament": "^4.0",
+        "intervention/image": "^3.0",
+        "spatie/laravel-package-tools": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Eriktailor\\FilamentWebpUploads\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Eriktailor\\FilamentWebpUploads\\FilamentWebpUploadsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
