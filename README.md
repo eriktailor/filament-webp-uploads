@@ -1,6 +1,6 @@
 # Filament WebP Uploads
 
-Automatic WebP conversion for Filament v4 FileUpload fields with optional resizing and quality control.
+Automatic WebP conversion for Filament FileUpload fields with optional resizing and quality control.
 
 ## Features
 
@@ -8,6 +8,7 @@ Automatic WebP conversion for Filament v4 FileUpload fields with optional resizi
 - 📏 **Smart Resizing**: Optional image resizing with aspect ratio preservation (no upscaling)
 - ⚙️ **Configurable Quality**: Control WebP compression quality per-field or globally
 - 🔄 **Multiple Upload Support**: Works with both single and multiple file uploads
+- 🧭 **EXIF Orientation**: Rotation from the camera is baked into the pixels, so photos never come out sideways
 - 🛡️ **Safe Fallback**: Non-image files and conversion failures handled gracefully
 - 📝 **Error Logging**: Failed conversions logged for debugging
 
@@ -15,7 +16,8 @@ Automatic WebP conversion for Filament v4 FileUpload fields with optional resizi
 
 - PHP 8.2+
 - Laravel 12+
-- Filament v4.0+
+- Filament v5.0+
+- Intervention Image v3 or v4 (either works; the package adapts at runtime)
 - GD extension with WebP support
 
 ## Installation
@@ -71,6 +73,20 @@ WebpFileUpload::make('image')
 ```
 
 **Note**: Images smaller than the specified width will NOT be upscaled - they keep their original size.
+
+### Resizing Without Converting
+
+`->resize()` may be used on its own. The image is scaled down and re-encoded in
+its original format, leaving the extension unchanged:
+
+```php
+WebpFileUpload::make('image')
+    ->resize(1920) // no ->webp(), so a JPEG stays a JPEG
+    ->disk('public')
+    ->directory('images');
+```
+
+The two methods may be called in either order.
 
 ### Multiple Uploads
 
@@ -135,12 +151,20 @@ These defaults are used when `->webp()` or `->resize()` are called without argum
 
 1. **File Upload**: User uploads an image through Filament FileUpload field
 2. **MIME Check**: Plugin checks if file is an image (starts with `image/`)
-3. **Resize** (optional): If configured and image is larger than target width, scales down maintaining aspect ratio
-4. **Convert**: Image is converted to WebP format using Intervention Image v3 with GD driver
-5. **Save**: WebP file is saved to configured storage disk/directory
-6. **Fallback**: Non-images or conversion errors result in original file being saved
+3. **Orient**: EXIF rotation is applied to the pixels, since encoding strips the EXIF data that described it
+4. **Resize** (optional): If configured and image is larger than target width, scales down maintaining aspect ratio
+5. **Convert**: Image is re-encoded using Intervention Image with the GD driver — to WebP when `->webp()` was called, otherwise back to its original format
+6. **Save**: The result is saved to the configured storage disk/directory
+7. **Fallback**: Non-images or conversion errors result in original file being saved
 
-**Important**: Only the WebP version is saved - original files are not retained.
+**Important**: Only the converted version is saved - original files are not retained.
+
+### Intervention Image v3 and v4
+
+Intervention Image v4 renamed two entry points this package uses
+(`ImageManager::read()` → `decodePath()`, `Image::encodeByExtension()` →
+`encodeUsingFileExtension()`). `Support\Intervention` dispatches on whichever
+major is installed, so the package works unchanged on both.
 
 ## Error Handling
 
